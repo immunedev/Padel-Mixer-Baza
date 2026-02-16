@@ -27,7 +27,7 @@ A client-side web application for organizing and managing padel tournaments. Sup
 - **Dynamic standings** -- leaderboard updates after each completed match.
 - **Shareable results** -- generate a URL to share final tournament results with anyone; no account or login required.
 - **Offline-first** -- all data is stored in the browser via localStorage. No server, no database.
-- **Bilingual** -- supports Polish (default) and English, switchable at any time.
+- **Trilingual** -- supports Polish (default), English, and German, switchable at any time.
 
 ---
 
@@ -134,7 +134,7 @@ A client-side web application for organizing and managing padel tournaments. Sup
 
 ### Switching Language
 
-- Use the language toggle in the header to switch between Polish and English at any time. The preference is saved in the browser.
+- Use the language toggle in the header to switch between Polish, English, and German at any time. The preference is saved in the browser.
 
 ### Managing Tournaments
 
@@ -171,7 +171,7 @@ src/
     scoring.ts                -- Scoring engine and standings calculation
     share.ts                  -- URL-based result sharing (encode/decode)
     storage.ts                -- localStorage persistence layer
-    i18n.ts                   -- Translations (Polish and English)
+    i18n.ts                   -- Translations (Polish, English, and German)
 ```
 
 ---
@@ -206,7 +206,7 @@ Aplikacja webowa do organizacji i prowadzenia turniejow padel. Obsluguje wiele f
 - **Dynamiczna tabela wynikow** -- klasyfikacja aktualizuje sie po kazdym zakonczonym meczu.
 - **Udostepnianie wynikow** -- generowanie linku URL do udostepnienia wynikow turnieju dowolnej osobie; bez konta i logowania.
 - **Tryb offline** -- wszystkie dane przechowywane w przegladarce (localStorage). Bez serwera, bez bazy danych.
-- **Dwujezycznosc** -- obsluga jezyka polskiego (domyslny) i angielskiego, przelaczanie w dowolnym momencie.
+- **Trojjezycznosc** -- obsluga jezyka polskiego (domyslny), angielskiego i niemieckiego, przelaczanie w dowolnym momencie.
 
 ---
 
@@ -313,7 +313,7 @@ Aplikacja webowa do organizacji i prowadzenia turniejow padel. Obsluguje wiele f
 
 ### Zmiana jezyka
 
-- Uzyj przelacznika jezyka w naglowku, aby przelaczac miedzy polskim a angielskim w dowolnym momencie. Preferencja jest zapisywana w przegladarce.
+- Uzyj przelacznika jezyka w naglowku, aby przelaczac miedzy polskim, angielskim i niemieckim w dowolnym momencie. Preferencja jest zapisywana w przegladarce.
 
 ### Zarzadzanie turniejami
 
@@ -350,5 +350,5 @@ src/
     scoring.ts                -- Silnik punktacji i obliczanie klasyfikacji
     share.ts                  -- Udostepnianie wynikow przez URL (kodowanie/dekodowanie)
     storage.ts                -- Warstwa persystencji localStorage
-    i18n.ts                   -- Tlumaczenia (polski i angielski)
+    i18n.ts                   -- Tlumaczenia (polski, angielski i niemiecki)
 ```

@@ -1,8 +1,8 @@
 // ==========================================
-// i18n — Polish (default) & English
+// i18n — Polish (default), English & German
 // ==========================================
 
-export type Locale = 'pl' | 'en';
+export type Locale = 'pl' | 'en' | 'de';
 
 export interface Translations {
     // General
@@ -302,7 +302,104 @@ const en: Translations = {
     evenPlayersRequired: 'Even number of players required',
 };
 
-export const translations: Record<Locale, Translations> = { pl, en };
+const de: Translations = {
+    appName: 'Padel Mixer',
+    newTournament: 'Neues Turnier',
+    continueTournament: 'Fortsetzen',
+    deleteTournament: 'Turnier löschen',
+    noTournaments: 'Keine gespeicherten Turniere. Erstelle dein erstes Turnier!',
+    savedTournaments: 'Gespeicherte Turniere',
+    backToHome: 'Startseite',
+    language: 'Sprache',
+
+    formatAmericano: 'Americano',
+    formatMixedAmericano: 'Mixed Americano',
+    formatTeamAmericano: 'Team Americano',
+    formatMexicano: 'Mexicano',
+    formatTeamMexicano: 'Team Mexicano',
+    formatAmericanoDesc: 'Klassisches Format — jeder spielt mit jedem in Rotation. Einzelwertung.',
+    formatMixedAmericanoDesc: 'Paare bestehen immer aus Mann + Frau. Einzelwertung.',
+    formatTeamAmericanoDesc: 'Feste 2er-Teams. Teamwertung.',
+    formatMexicanoDesc: 'Dynamische Paarung nach Rangliste. Je besser du spielst, desto stärker die Gegner.',
+    formatTeamMexicanoDesc: 'Feste Teams — Spiele basierend auf der aktuellen Teamrangliste.',
+
+    setupTitle: 'Turnier-Einrichtung',
+    stepFormat: 'Format',
+    stepPlayers: 'Spieler',
+    stepSettings: 'Einstellungen',
+    stepReview: 'Überprüfung',
+    selectFormat: 'Turnierformat auswählen',
+    addPlayers: 'Spieler hinzufügen',
+    playerName: 'Spielername',
+    addPlayer: 'Spieler hinzufügen',
+    removePlayer: 'Entfernen',
+    tournamentName: 'Turniername',
+    numberOfCourts: 'Anzahl der Plätze',
+    scoringSystem: 'Punktesystem',
+    pointsPerMatch: 'Punkte pro Spiel',
+    startTournament: 'Turnier starten',
+    next: 'Weiter',
+    back: 'Zurück',
+    review: 'Überprüfung',
+    players: 'Spieler',
+    courts: 'Plätze',
+    format: 'Format',
+    gender: 'Geschlecht',
+    male: 'Männlich',
+    female: 'Weiblich',
+    teamName: 'Teamname',
+    addTeam: 'Team hinzufügen',
+    assignToTeam: 'Dem Team zuweisen',
+
+    matches: 'Spiele',
+    leaderboard: 'Rangliste',
+    stats: 'Statistiken',
+    round: 'Runde',
+    currentRound: 'Aktuelle Runde',
+    court: 'Platz',
+    vs: 'vs',
+    score: 'Ergebnis',
+    enterScore: 'Ergebnis eingeben',
+    saveScore: 'Ergebnis speichern',
+    nextRound: 'Nächste Runde',
+    finishTournament: 'Turnier beenden',
+    sittingOut: 'Pausieren',
+    allMatchesCompleted: 'Alle Spiele abgeschlossen',
+    enterAllScores: 'Alle Spielergebnisse eingeben, um fortzufahren',
+    roundOf: 'von',
+
+    position: 'Pos.',
+    player: 'Spieler',
+    points: 'Punkte',
+    played: 'Gespielt',
+    won: 'Gewonnen',
+    lost: 'Verloren',
+    diff: '+/-',
+
+    results: 'Ergebnisse',
+    tournamentResults: 'Turnierergebnisse',
+    champion: 'Meister',
+    podium: 'Podium',
+    finalStandings: 'Endstand',
+    matchHistory: 'Spielverlauf',
+    shareResults: 'Ergebnisse teilen',
+    linkCopied: 'Link kopiert!',
+    shareDescription: 'Teile einen Link mit den Turnierergebnissen',
+    pointsTotal: 'Gesamtpunkte',
+    matchesTotal: 'Spiele gesamt',
+
+    confirmDelete: 'Möchtest du dieses Turnier wirklich löschen?',
+    cancel: 'Abbrechen',
+    confirm: 'Bestätigen',
+    close: 'Schließen',
+    error: 'Fehler',
+    success: 'Erfolg',
+    warning: 'Warnung',
+    minPlayersRequired: 'Mindestanzahl an Spielern erforderlich:',
+    evenPlayersRequired: 'Gerade Anzahl an Spielern erforderlich',
+};
+
+export const translations: Record<Locale, Translations> = { pl, en, de };
 
 export function getTranslations(locale: Locale): Translations {
     return translations[locale];

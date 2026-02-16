@@ -46,6 +46,15 @@ export default function Header() {
                         >
                             EN
                         </button>
+                        <button
+                            onClick={() => setLocale('de')}
+                            className={`relative px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300 ${locale === 'de'
+                                ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/30'
+                                : 'text-navy-400 hover:text-navy-200'
+                                }`}
+                        >
+                            DE
+                        </button>
                     </div>
                 </div>
             </div>
