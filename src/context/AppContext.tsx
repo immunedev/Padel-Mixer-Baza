@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react';
 import { Locale, getTranslations, Translations } from '@/lib/i18n';
-import { Tournament, TournamentSettings, Match, Player, Team } from '@/lib/types';
+import { Tournament, TournamentSettings, Match, Player, Team, Round } from '@/lib/types';
 import { saveTournament, loadTournament, listTournaments, deleteTournament as deleteStoredTournament, saveLocale, loadLocale } from '@/lib/storage';
 import { calculateStandings, calculateTeamStandings } from '@/lib/scoring';
 import {
@@ -45,7 +45,7 @@ function createTournament(settings: TournamentSettings): Tournament {
     const rankingStrategy = settings.rankingStrategy || 'points';
     const totalRounds = settings.totalRounds || null;
 
-    let rounds: typeof settings.rounds = [];
+    let rounds: Round[] = [];
 
     // In unlimited mode for Americano-type formats, only generate the first round
     if (roundMode === 'unlimited' && ['americano', 'mixedAmericano', 'teamAmericano'].includes(settings.format)) {

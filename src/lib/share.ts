@@ -86,6 +86,8 @@ export function parseShareableData(encoded: string): Tournament | null {
             status: 'finished',
             createdAt: data.d,
             updatedAt: new Date().toISOString(),
+            totalRounds: null,
+            rankingStrategy: 'points',
         };
 
         return tournament;
