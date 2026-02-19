@@ -34,6 +34,20 @@ export default function NewTournamentPage() {
     const [courts, setCourts] = useState(2);
     const [scoringSystem, setScoringSystem] = useState<ScoringSystem>(21);
     const [roundMode, setRoundMode] = useState<RoundMode>('unlimited');
+    const [totalRounds, setTotalRounds] = useState<number | null>(null);
+    const [rankingStrategy, setRankingStrategy] = useState<'points' | 'wins'>('points');
+
+    // Calculate standard rounds for current configuration
+    const getStandardRounds = () => {
+        if (format === 'americano') return players.length - 1;
+        if (format === 'mixedAmericano') {
+            const males = players.filter(p => p.gender === 'male').length;
+            const females = players.filter(p => p.gender === 'female').length;
+            return Math.min(males, females) - 1;
+        }
+        if (format === 'teamAmericano' || format === 'teamMexicano') return teams.length - 1;
+        return 0; // Mexicano rounds are indefinite usually
+    };
 
     // Pre-fill from repeat tournament settings
     useEffect(() => {
@@ -50,6 +64,8 @@ export default function NewTournamentPage() {
                     if (s.courts) setCourts(s.courts);
                     if (s.scoringSystem) setScoringSystem(s.scoringSystem);
                     if (s.roundMode) setRoundMode(s.roundMode);
+                    if (s.totalRounds) setTotalRounds(s.totalRounds);
+                    if (s.rankingStrategy) setRankingStrategy(s.rankingStrategy);
                     setStep('settings');
                     localStorage.removeItem('padel_repeat_settings');
                 }
@@ -59,6 +75,14 @@ export default function NewTournamentPage() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Set default total rounds when switching to fixed
+    useEffect(() => {
+        if (roundMode === 'fixed' && totalRounds === null) {
+            const std = getStandardRounds();
+            if (std > 0) setTotalRounds(std);
+        }
+    }, [roundMode, players, teams, format]);
 
     const isTeamFormat = format === 'teamAmericano' || format === 'teamMexicano';
     const isMixedFormat = format === 'mixedAmericano';
@@ -158,6 +182,7 @@ export default function NewTournamentPage() {
                 }
                 return players.length >= 4;
             case 'settings':
+                if (roundMode === 'fixed' && (!totalRounds || totalRounds < 1)) return false;
                 return tournamentName.trim().length > 0;
             case 'review':
                 return true;
@@ -193,6 +218,8 @@ export default function NewTournamentPage() {
                 players,
                 teams: isTeamFormat ? teams : [],
                 roundMode,
+                totalRounds: roundMode === 'fixed' ? totalRounds : null,
+                rankingStrategy,
             },
         });
         // Navigate to the active tournament (the latest one)
@@ -487,9 +514,38 @@ export default function NewTournamentPage() {
 
                                 <div className="glass-card-static p-5">
                                     <label className="block text-sm font-medium text-navy-300 mb-3">
-                                        {t.roundModeLabel}
+                                        {t.rankingPriority}
                                     </label>
                                     <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setRankingStrategy('points')}
+                                            className={`flex-1 py-3 rounded-xl font-bold transition-all ${rankingStrategy === 'points'
+                                                ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
+                                                : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                                }`}
+                                        >
+                                            🏆 {t.points}
+                                        </button>
+                                        <button
+                                            onClick={() => setRankingStrategy('wins')}
+                                            className={`flex-1 py-3 rounded-xl font-bold transition-all ${rankingStrategy === 'wins'
+                                                ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
+                                                : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                                }`}
+                                        >
+                                            🥇 {t.priorityWins}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-navy-400 mt-2 text-center">
+                                        {t.rankingPriorityDesc}
+                                    </p>
+                                </div>
+
+                                <div className="glass-card-static p-5">
+                                    <label className="block text-sm font-medium text-navy-300 mb-3">
+                                        {t.roundModeLabel}
+                                    </label>
+                                    <div className="flex gap-3 mb-4">
                                         <button
                                             onClick={() => setRoundMode('fixed')}
                                             className={`flex-1 py-3 rounded-xl font-bold transition-all ${roundMode === 'fixed'
@@ -509,6 +565,31 @@ export default function NewTournamentPage() {
                                             ∞ {t.roundModeUnlimited}
                                         </button>
                                     </div>
+
+                                    {roundMode === 'fixed' && (
+                                        <div className="animate-fade-in">
+                                            <label className="block text-sm font-medium text-navy-300 mb-2">
+                                                Number of Rounds
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={100}
+                                                value={totalRounds || ''}
+                                                onChange={(e) => setTotalRounds(parseInt(e.target.value) || null)}
+                                                className="input text-center font-bold text-lg"
+                                                placeholder={getStandardRounds() > 0 ? getStandardRounds().toString() : '8'}
+                                            />
+                                            {totalRounds && getStandardRounds() > 0 && totalRounds !== getStandardRounds() && (
+                                                <p className="text-xs text-gold-400/80 mt-2 text-center">
+                                                    Standard Round Robin is {getStandardRounds()} rounds.
+                                                    {totalRounds > getStandardRounds()
+                                                        ? ' Extra rounds will be generated dynamically.'
+                                                        : ' Rounds will be sliced.'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -536,14 +617,22 @@ export default function NewTournamentPage() {
                                     <span className="text-navy-300">{t.courts}</span>
                                     <span className="font-bold text-white">{courts}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-2">
+                                <div className="flex justify-between items-center py-2 border-b border-navy-700/50">
                                     <span className="text-navy-300">{t.scoringSystem}</span>
                                     <span className="font-bold text-white">{scoringSystem} pkt</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-navy-700/50">
+                                    <span className="text-navy-300">{t.priorityLabel}</span>
+                                    <span className="font-bold text-white uppercase">
+                                        {rankingStrategy === 'points' ? t.points : t.priorityWins}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-t border-navy-700/50">
                                     <span className="text-navy-300">{t.roundModeLabel}</span>
                                     <span className="font-bold text-white">
-                                        {roundMode === 'unlimited' ? `∞ ${t.roundModeUnlimited}` : t.roundModeFixed}
+                                        {roundMode === 'unlimited'
+                                            ? `∞ ${t.roundModeUnlimited}`
+                                            : `${totalRounds} Rounds`}
                                     </span>
                                 </div>
 

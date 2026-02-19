@@ -121,20 +121,38 @@ export function generateAmericanoRounds(
     return rounds;
 }
 
+// ─── Ranking Helper ─────────────────────────────────────────
+function sortStandings(
+    standings: PlayerStats[],
+    strategy: 'points' | 'wins'
+): PlayerStats[] {
+    return [...standings].sort((a, b) => {
+        if (strategy === 'wins') {
+            if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            return b.pointDifference - a.pointDifference;
+        }
+        // Default: points
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference;
+        return b.matchesWon - a.matchesWon;
+    });
+}
+
 // ─── Final Americano Round (1&4 vs 2&3) ─────────────────────
 // Creates a final round based on current standings:
 // Rank 1 + Rank 4 vs Rank 2 + Rank 3 (per court group of 4)
 export function generateFinalAmericanoRound(
     players: Player[],
     standings: PlayerStats[],
-    courts: number
+    courts: number,
+    rankingStrategy: 'points' | 'wins' = 'points'
 ): Round {
     const roundMatches: Match[] = [];
     const usedInRound = new Set<string>();
 
-    // Sort by standings (highest points first)
-    const orderedIds = [...standings]
-        .sort((a, b) => b.totalPoints - a.totalPoints || b.pointDifference - a.pointDifference)
+    // Sort by standings based on strategy
+    const orderedIds = sortStandings(standings, rankingStrategy)
         .map((s) => s.playerId);
 
     for (let c = 0; c < courts; c++) {
@@ -303,7 +321,8 @@ export function generateMexicanoRound(
     players: Player[],
     standings: PlayerStats[],
     roundNumber: number,
-    courts: number
+    courts: number,
+    rankingStrategy: 'points' | 'wins' = 'points'
 ): Round {
     const roundMatches: Match[] = [];
     const usedInRound = new Set<string>();
@@ -314,10 +333,8 @@ export function generateMexicanoRound(
         // Random for first round
         orderedIds = shuffle(players.map((p) => p.id));
     } else {
-        // Sort by standings (highest points first)
-        orderedIds = [...standings]
-            .sort((a, b) => b.totalPoints - a.totalPoints || b.pointDifference - a.pointDifference)
-            .map((s) => s.playerId);
+        // Sort by standings
+        orderedIds = sortStandings(standings, rankingStrategy).map((s) => s.playerId);
     }
 
     for (let c = 0; c < courts; c++) {

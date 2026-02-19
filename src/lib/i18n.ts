@@ -126,6 +126,12 @@ export interface Translations {
     roundModeUnlimited: string;
     byePoints: string;
 
+    // Priority
+    rankingPriority: string;
+    rankingPriorityDesc: string;
+    priorityWins: string;
+    priorityLabel: string;
+
     // Search & pagination
     searchTournaments: string;
     filterAll: string;
@@ -245,6 +251,12 @@ const pl: Translations = {
     roundModeFixed: 'Określona liczba',
     roundModeUnlimited: 'Nielimitowane',
     byePoints: '+11 pkt za pauzę',
+
+    rankingPriority: 'Priorytet rankingu i parowania',
+    rankingPriorityDesc: 'Decyduje o kolejności w tabeli i parowaniu w Mexicano.',
+    priorityWins: 'Wygrane',
+    priorityLabel: 'Priorytet',
+
     searchTournaments: 'Szukaj turnieju...',
     filterAll: 'Wszystkie',
     filterActive: 'Aktywne',
@@ -363,6 +375,12 @@ const en: Translations = {
     roundModeFixed: 'Fixed rounds',
     roundModeUnlimited: 'Unlimited',
     byePoints: '+11 pts bye',
+
+    rankingPriority: 'Ranking & Pairing Priority',
+    rankingPriorityDesc: 'Determines how leaderboard is sorted and how matches are paired in Mexicano.',
+    priorityWins: 'Wins',
+    priorityLabel: 'Priority',
+
     searchTournaments: 'Search tournaments...',
     filterAll: 'All',
     filterActive: 'Active',
@@ -481,6 +499,12 @@ const de: Translations = {
     roundModeFixed: 'Feste Runden',
     roundModeUnlimited: 'Unbegrenzt',
     byePoints: '+11 Pkt Freilos',
+
+    rankingPriority: 'Ranglisten- & Paarungspriorität',
+    rankingPriorityDesc: 'Bestimmt die Sortierung der Rangliste und die Paarungen im Mexicano.',
+    priorityWins: 'Siege',
+    priorityLabel: 'Priorität',
+
     searchTournaments: 'Turnier suchen...',
     filterAll: 'Alle',
     filterActive: 'Aktiv',

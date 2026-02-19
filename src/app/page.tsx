@@ -77,27 +77,27 @@ export default function HomePage() {
       <Header />
       <main className="max-w-5xl mx-auto px-4 py-8 min-h-[calc(100vh-64px)] flex flex-col items-center justify-center">
         {/* Hero Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="relative inline-block mb-6">
+        <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <div className="relative inline-block mb-4 md:mb-6">
             <Image
               src="/baza-padel-logo.png"
               alt="Baza Padel Club"
               width={280}
               height={80}
-              className="mx-auto object-contain"
+              className="mx-auto object-contain w-48 md:w-72"
               priority
             />
           </div>
-          <p className="text-navy-300 text-lg max-w-md mx-auto">
+          <p className="text-navy-300 text-base md:text-lg max-w-md mx-auto px-4">
             Americano • Mexicano • Mixed • Team
           </p>
         </div>
 
         {/* New Tournament CTA */}
-        <div className="flex justify-center mb-10 animate-slide-up stagger-1" style={{ opacity: 0 }}>
+        <div className="flex justify-center mb-8 md:mb-10 animate-slide-up stagger-1" style={{ opacity: 0 }}>
           <button
             onClick={() => router.push('/tournament/new')}
-            className="btn-primary text-lg px-10 py-4 flex items-center gap-3"
+            className="btn-primary text-base md:text-lg px-8 py-3 md:px-10 md:py-4 flex items-center gap-2 md:gap-3"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="10" y1="4" x2="10" y2="16" />
@@ -147,38 +147,38 @@ export default function HomePage() {
                   className="glass-card p-4 cursor-pointer animate-fade-in"
                   style={{ animationDelay: `${index * 0.05}s`, opacity: 0 }}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                     <div
-                      className="flex items-center gap-4 flex-1"
+                      className="flex items-start gap-3 sm:gap-4 flex-1 w-full"
                       onClick={() =>
                         tournament.status === 'finished'
                           ? router.push(`/tournament/${tournament.id}/results`)
                           : router.push(`/tournament/${tournament.id}`)
                       }
                     >
-                      <div className="text-2xl">{formatIcons[tournament.format]}</div>
+                      <div className="text-2xl sm:text-3xl mt-1 sm:mt-0">{formatIcons[tournament.format]}</div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-bold text-white truncate">{tournament.name}</h3>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1.5">
+                          <h3 className="font-bold text-white text-base sm:text-lg truncate max-w-[200px] sm:max-w-xs">{tournament.name}</h3>
                           {getStatusBadge(tournament.status)}
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-navy-300">
-                          <span>{getFormatLabel(tournament.format)}</span>
-                          <span>•</span>
-                          <span>{tournament.players.length} {t.players.toLowerCase()}</span>
-                          <span>•</span>
-                          <span>{tournament.courts} {t.courts.toLowerCase()}</span>
-                          <span>•</span>
-                          <span>{tournament.scoringSystem} pkt</span>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-navy-300">
+                          <span className="whitespace-nowrap">{getFormatLabel(tournament.format)}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap">{tournament.players.length} {t.players.toLowerCase()}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap">{tournament.courts} {t.courts.toLowerCase()}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap">{tournament.scoringSystem} pkt</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:ml-4 border-t sm:border-t-0 border-navy-700/30 pt-3 sm:pt-0 mt-2 sm:mt-0">
                       {tournament.status === 'active' && (
                         <button
                           onClick={() => router.push(`/tournament/${tournament.id}`)}
-                          className="btn-secondary py-2 px-4 text-sm"
+                          className="btn-secondary py-1.5 px-3 sm:py-2 sm:px-4 text-xs sm:text-sm flex-1 sm:flex-none justify-center"
                         >
                           {t.continueTournament}
                         </button>
@@ -200,8 +200,11 @@ export default function HomePage() {
                         </div>
                       ) : (
                         <button
-                          onClick={() => setDeletingId(tournament.id)}
-                          className="btn-ghost py-2 px-3 text-sm text-red-400 hover:text-red-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingId(tournament.id);
+                          }}
+                          className="btn-ghost py-2 px-3 text-sm text-red-400 hover:text-red-300 ml-auto sm:ml-0"
                         >
                           ✕
                         </button>

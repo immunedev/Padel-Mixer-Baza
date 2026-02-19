@@ -42,8 +42,10 @@ function createTournament(settings: TournamentSettings): Tournament {
     const id = generateTournamentId();
     const now = new Date().toISOString();
     const roundMode = settings.roundMode || 'fixed';
+    const rankingStrategy = settings.rankingStrategy || 'points';
+    const totalRounds = settings.totalRounds || null;
 
-    let rounds;
+    let rounds: typeof settings.rounds = [];
 
     // In unlimited mode for Americano-type formats, only generate the first round
     if (roundMode === 'unlimited' && ['americano', 'mixedAmericano', 'teamAmericano'].includes(settings.format)) {
@@ -61,7 +63,7 @@ function createTournament(settings: TournamentSettings): Tournament {
                 rounds = generateTeamAmericanoRounds(settings.teams, settings.players, settings.courts);
                 break;
             case 'mexicano': {
-                const firstRound = generateMexicanoRound(settings.players, [], 1, settings.courts);
+                const firstRound = generateMexicanoRound(settings.players, [], 1, settings.courts, rankingStrategy);
                 rounds = [firstRound];
                 break;
             }
@@ -72,6 +74,20 @@ function createTournament(settings: TournamentSettings): Tournament {
             }
             default:
                 rounds = generateAmericanoRounds(settings.players, settings.courts);
+        }
+
+        // Handle specific number of rounds for Fixed mode (only for Americano types that are pre-generated)
+        if (roundMode === 'fixed' && totalRounds && ['americano', 'mixedAmericano', 'teamAmericano'].includes(settings.format)) {
+            if (rounds.length > totalRounds) {
+                // Slice if fewer rounds requested
+                rounds = rounds.slice(0, totalRounds);
+            } else if (rounds.length < totalRounds) {
+                // Generate extra rounds if more requested
+                while (rounds.length < totalRounds) {
+                    const nextRound = generateAmericanoNextRound(settings.players, rounds, settings.courts);
+                    rounds.push(nextRound);
+                }
+            }
         }
     }
 
@@ -86,6 +102,8 @@ function createTournament(settings: TournamentSettings): Tournament {
         rounds,
         currentRound: 1,
         roundMode,
+        totalRounds,
+        rankingStrategy,
         status: 'active',
         createdAt: now,
         updatedAt: now,
@@ -156,7 +174,7 @@ function reducer(state: AppState, action: Action): AppState {
             // For Mexicano formats, generate next round dynamically
             if (t.format === 'mexicano') {
                 const standings = calculateStandings(t);
-                const newRound = generateMexicanoRound(t.players, standings, nextRoundNumber, t.courts);
+                const newRound = generateMexicanoRound(t.players, standings, nextRoundNumber, t.courts, t.rankingStrategy);
                 t.rounds = [...t.rounds, newRound];
             } else if (t.format === 'teamMexicano') {
                 const teamStandings = calculateTeamStandings(t);
@@ -194,7 +212,7 @@ function reducer(state: AppState, action: Action): AppState {
             const t = { ...state.currentTournament };
             const standings = calculateStandings(t);
             const nextRoundNumber = t.currentRound + 1;
-            const finalRound = generateFinalAmericanoRound(t.players, standings, t.courts);
+            const finalRound = generateFinalAmericanoRound(t.players, standings, t.courts, t.rankingStrategy);
             finalRound.number = nextRoundNumber;
             finalRound.matches = finalRound.matches.map((m) => ({ ...m, round: nextRoundNumber - 1 }));
             t.rounds = [...t.rounds, finalRound];

@@ -20,6 +20,7 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
     const [tempScore1, setTempScore1] = useState(0);
     const [tempScore2, setTempScore2] = useState(0);
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+    // Initialize sort mode from tournament strategy
     const [sortMode, setSortMode] = useState<SortMode>('points');
     const [showFinalConfirm, setShowFinalConfirm] = useState(false);
     const [isFinalRound, setIsFinalRound] = useState(false);
@@ -27,6 +28,12 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
     useEffect(() => {
         loadTournamentById(id);
     }, [id, loadTournamentById]);
+
+    useEffect(() => {
+        if (currentTournament) {
+            setSortMode(currentTournament.rankingStrategy || 'points');
+        }
+    }, [currentTournament]);
 
     if (!currentTournament) {
         return (
@@ -59,6 +66,11 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
     const isCurrentRoundComplete = currentRound?.matches.every(
         (m) => m.status === 'completed'
     );
+    // Check if we should allow next round:
+    // 1. Unlimited -> always (until manually finished)
+    // 2. Fixed -> if current round < rounds.length OR logic allows adding more?
+    //    Actually for 'Fixed' with pre-generated rounds, rounds.length is the limit.
+    //    If 'Fixed' with generation (which we impl in createTournament), rounds.length is correct.
     const hasMoreRounds =
         tournament.format === 'mexicano' || tournament.format === 'teamMexicano'
             ? true
@@ -125,6 +137,19 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
         }
     }, [isFinalRound, isCurrentRoundComplete, dispatch, router, tournament.id]);
 
+    const CourtVisuals = () => (
+        <>
+            <div className="court-card-logo" />
+            <div className="court-lines">
+                <div className="court-line-service-left" />
+                <div className="court-line-service-right" />
+                <div className="court-line-center-left" />
+                <div className="court-line-center-right" />
+            </div>
+            <div className="court-net" />
+        </>
+    );
+
     return (
         <>
             <Header />
@@ -136,7 +161,9 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                         <span className="badge badge-live">LIVE</span>
                         <span>
                             {t.round} {tournament.currentRound}
-                            {tournament.roundMode !== 'unlimited' && (
+                            {tournament.roundMode !== 'unlimited' && tournament.totalRounds && (
+                                <> / {tournament.totalRounds}</>)}
+                            {tournament.roundMode === 'fixed' && !tournament.totalRounds && (
                                 <> {t.roundOf} {tournament.rounds.length}</>)}
                         </span>
                         <span>•</span>
@@ -185,10 +212,7 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                         {editingMatch === match.id ? (
                                             /* ── Court Card Score Editing ── */
                                             <div className="court-card animate-scale-in">
-                                                <div className="court-card-logo" />
-                                                <div className="court-card-service-top" />
-                                                <div className="court-card-service-bottom" />
-                                                <div className="court-card-center-line" />
+                                                <CourtVisuals />
                                                 <div className="court-card-content">
                                                     {/* Court label */}
                                                     <div className="text-center mb-1">
@@ -253,10 +277,7 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                                 className="w-full text-left"
                                             >
                                                 <div className="court-card" style={{ minHeight: '140px', padding: '14px 12px' }}>
-                                                    <div className="court-card-logo" />
-                                                    <div className="court-card-service-top" />
-                                                    <div className="court-card-service-bottom" />
-                                                    <div className="court-card-center-line" />
+                                                    <CourtVisuals />
                                                     <div className="court-card-content">
                                                         {/* Court label + completed badge */}
                                                         <div className="flex items-center justify-between mb-2">

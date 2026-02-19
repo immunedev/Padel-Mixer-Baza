@@ -66,6 +66,8 @@ export interface Tournament {
     rounds: Round[];
     currentRound: number;
     roundMode: RoundMode;
+    totalRounds: number | null;
+    rankingStrategy: 'points' | 'wins';
     status: TournamentStatus;
     createdAt: string;
     updatedAt: string;
@@ -90,4 +92,6 @@ export interface TournamentSettings {
     players: Player[];
     teams: Team[];
     roundMode: RoundMode;
+    totalRounds: number | null;
+    rankingStrategy: 'points' | 'wins';
 }

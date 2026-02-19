@@ -12,7 +12,7 @@ export default function Header() {
         <header className="sticky top-0 z-50 backdrop-blur-xl bg-navy-950/80 border-b border-navy-700/30">
             <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="h-10 transition-transform group-hover:scale-105">
+                    <div className="h-8 md:h-10 transition-transform group-hover:scale-105">
                         <Image
                             src="/baza-padel-logo.png"
                             alt="Baza Padel Club"
