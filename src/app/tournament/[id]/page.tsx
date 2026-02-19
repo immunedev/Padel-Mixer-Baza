@@ -9,6 +9,7 @@ import { isScoreValid } from '@/lib/scoring';
 import { Match, PlayerStats } from '@/lib/types';
 
 type Tab = 'matches' | 'leaderboard' | 'stats';
+type SortMode = 'points' | 'wins';
 
 export default function ActiveTournamentPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -19,6 +20,9 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
     const [tempScore1, setTempScore1] = useState(0);
     const [tempScore2, setTempScore2] = useState(0);
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+    const [sortMode, setSortMode] = useState<SortMode>('points');
+    const [showFinalConfirm, setShowFinalConfirm] = useState(false);
+    const [isFinalRound, setIsFinalRound] = useState(false);
 
     useEffect(() => {
         loadTournamentById(id);
@@ -37,14 +41,32 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
 
     const tournament = currentTournament;
     const standings = calculateStandings(tournament);
+
+    // Sort standings based on selected mode
+    const sortedStandings = [...standings].sort((a, b) => {
+        if (sortMode === 'wins') {
+            if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            return b.pointDifference - a.pointDifference;
+        }
+        // Default: by points
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference;
+        return b.matchesWon - a.matchesWon;
+    });
+
     const currentRound = tournament.rounds[tournament.currentRound - 1];
     const isCurrentRoundComplete = currentRound?.matches.every(
         (m) => m.status === 'completed'
     );
     const hasMoreRounds =
         tournament.format === 'mexicano' || tournament.format === 'teamMexicano'
-            ? true // Mexicano can always generate more rounds
-            : tournament.currentRound < tournament.rounds.length;
+            ? true
+            : tournament.roundMode === 'unlimited'
+                ? true
+                : tournament.currentRound < tournament.rounds.length;
+
+    const isAmericanoFormat = tournament.format === 'americano';
 
     const getPlayerName = (playerId: string) =>
         tournament.players.find((p) => p.id === playerId)?.name || playerId;
@@ -59,12 +81,6 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
         const s1 = Math.max(0, Math.min(tournament.scoringSystem, val));
         setTempScore1(s1);
         setTempScore2(tournament.scoringSystem - s1);
-    };
-
-    const handleScore2Change = (val: number) => {
-        const s2 = Math.max(0, Math.min(tournament.scoringSystem, val));
-        setTempScore2(s2);
-        setTempScore1(tournament.scoringSystem - s2);
     };
 
     const saveScore = () => {
@@ -83,10 +99,31 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
         dispatch({ type: 'NEXT_ROUND' });
     };
 
+    const handleFinalRound = () => {
+        setShowFinalConfirm(true);
+    };
+
+    const confirmFinalRound = () => {
+        dispatch({ type: 'GENERATE_FINAL_ROUND' });
+        setShowFinalConfirm(false);
+        setIsFinalRound(true);
+    };
+
     const handleFinish = () => {
         dispatch({ type: 'FINISH_TOURNAMENT' });
         router.push(`/tournament/${tournament.id}/results`);
     };
+
+    // Generate score options for the picker
+    const scoreOptions = Array.from({ length: tournament.scoringSystem + 1 }, (_, i) => i);
+
+    // Auto-finish when final round scores are all entered
+    useEffect(() => {
+        if (isFinalRound && isCurrentRoundComplete) {
+            dispatch({ type: 'FINISH_TOURNAMENT' });
+            router.push(`/tournament/${tournament.id}/results`);
+        }
+    }, [isFinalRound, isCurrentRoundComplete, dispatch, router, tournament.id]);
 
     return (
         <>
@@ -97,7 +134,11 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                     <h1 className="text-2xl font-bold text-white mb-1">{tournament.name}</h1>
                     <div className="flex items-center justify-center gap-3 text-sm text-navy-300">
                         <span className="badge badge-live">LIVE</span>
-                        <span>{t.round} {tournament.currentRound} {t.roundOf} {tournament.rounds.length}</span>
+                        <span>
+                            {t.round} {tournament.currentRound}
+                            {tournament.roundMode !== 'unlimited' && (
+                                <> {t.roundOf} {tournament.rounds.length}</>)}
+                        </span>
                         <span>•</span>
                         <span>{tournament.scoringSystem} pkt</span>
                     </div>
@@ -138,126 +179,135 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                 {currentRound?.matches.map((match, idx) => (
                                     <div
                                         key={match.id}
-                                        className="glass-card-static p-4 animate-fade-in"
+                                        className="animate-fade-in"
                                         style={{ animationDelay: `${idx * 0.05}s`, opacity: 0 }}
                                     >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs font-medium text-navy-400 uppercase">
-                                                {t.court} {match.court}
-                                            </span>
-                                            {match.status === 'completed' && (
-                                                <span className="text-xs text-success font-medium">✓</span>
-                                            )}
-                                        </div>
-
                                         {editingMatch === match.id ? (
-                                            /* Score Editing Mode */
-                                            <div>
-                                                <div className="flex items-center gap-4 justify-center my-3">
-                                                    {/* Team 1 */}
-                                                    <div className="flex-1 text-right">
-                                                        <div className="text-sm font-medium text-navy-200 mb-2">
-                                                            {match.team1.playerIds.map(getPlayerName).join(' & ')}
+                                            /* ── Court Card Score Editing ── */
+                                            <div className="court-card animate-scale-in">
+                                                <div className="court-card-logo" />
+                                                <div className="court-card-service-top" />
+                                                <div className="court-card-service-bottom" />
+                                                <div className="court-card-center-line" />
+                                                <div className="court-card-content">
+                                                    {/* Court label */}
+                                                    <div className="text-center mb-1">
+                                                        <span className="text-xs font-bold text-white/60 uppercase tracking-widest">
+                                                            {t.court} {match.court}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-4 justify-center my-4">
+                                                        {/* Team 1 */}
+                                                        <div className="flex-1 text-center">
+                                                            <div className="text-sm font-bold text-white mb-3 drop-shadow-md">
+                                                                {match.team1.playerIds.map(getPlayerName).join(' & ')}
+                                                            </div>
+                                                            <div className="flex justify-center">
+                                                                <select
+                                                                    value={tempScore1}
+                                                                    onChange={(e) => handleScore1Change(Number(e.target.value))}
+                                                                    className="score-picker-select"
+                                                                >
+                                                                    {scoreOptions.map((v) => (
+                                                                        <option key={v} value={v}>{v}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <button
-                                                                onClick={() => handleScore1Change(tempScore1 - 1)}
-                                                                className="score-btn score-btn-minus"
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <span className="text-3xl font-black text-white w-14 text-center tabular-nums">
-                                                                {tempScore1}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => handleScore1Change(tempScore1 + 1)}
-                                                                className="score-btn score-btn-plus"
-                                                            >
-                                                                +
-                                                            </button>
+
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <span className="text-white/50 font-black text-xl">vs</span>
+                                                        </div>
+
+                                                        {/* Team 2 */}
+                                                        <div className="flex-1 text-center">
+                                                            <div className="text-sm font-bold text-white mb-3 drop-shadow-md">
+                                                                {match.team2.playerIds.map(getPlayerName).join(' & ')}
+                                                            </div>
+                                                            <div className="flex justify-center">
+                                                                <div className="score-auto">
+                                                                    {tempScore2}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
 
-                                                    <span className="text-navy-500 font-bold text-lg">:</span>
-
-                                                    {/* Team 2 */}
-                                                    <div className="flex-1 text-left">
-                                                        <div className="text-sm font-medium text-navy-200 mb-2">
-                                                            {match.team2.playerIds.map(getPlayerName).join(' & ')}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <button
-                                                                onClick={() => handleScore2Change(tempScore2 - 1)}
-                                                                className="score-btn score-btn-minus"
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <span className="text-3xl font-black text-white w-14 text-center tabular-nums">
-                                                                {tempScore2}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => handleScore2Change(tempScore2 + 1)}
-                                                                className="score-btn score-btn-plus"
-                                                            >
-                                                                +
-                                                            </button>
-                                                        </div>
+                                                    <div className="flex gap-2 justify-center mt-4">
+                                                        <button onClick={saveScore} className="btn-primary py-2 px-6 text-sm">
+                                                            ✓ {t.saveScore}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingMatch(null)}
+                                                            className="btn-ghost py-2 px-4 text-sm text-white/70 hover:text-white"
+                                                        >
+                                                            {t.cancel}
+                                                        </button>
                                                     </div>
-                                                </div>
-
-                                                <div className="flex gap-2 justify-center mt-3">
-                                                    <button onClick={saveScore} className="btn-primary py-2 px-6 text-sm">
-                                                        ✓ {t.saveScore}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setEditingMatch(null)}
-                                                        className="btn-ghost py-2 px-4 text-sm"
-                                                    >
-                                                        {t.cancel}
-                                                    </button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            /* Match Display Mode */
+                                            /* ── Court Card Display Mode ── */
                                             <button
                                                 onClick={() => startEditing(match)}
                                                 className="w-full text-left"
                                             >
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex-1 text-right">
-                                                        <span className="font-medium text-white">
-                                                            {match.team1.playerIds.map(getPlayerName).join(' & ')}
-                                                        </span>
-                                                    </div>
+                                                <div className="court-card" style={{ minHeight: '140px', padding: '14px 12px' }}>
+                                                    <div className="court-card-logo" />
+                                                    <div className="court-card-service-top" />
+                                                    <div className="court-card-service-bottom" />
+                                                    <div className="court-card-center-line" />
+                                                    <div className="court-card-content">
+                                                        {/* Court label + completed badge */}
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-xs font-bold text-white/60 uppercase tracking-widest">
+                                                                {t.court} {match.court}
+                                                            </span>
+                                                            {match.status === 'completed' && (
+                                                                <span className="text-xs text-green-300 font-medium bg-green-500/20 px-2 py-0.5 rounded-full">✓</span>
+                                                            )}
+                                                        </div>
 
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className={`text-2xl font-black tabular-nums ${match.status === 'completed'
-                                                                    ? match.score1! > match.score2!
-                                                                        ? 'text-success'
-                                                                        : 'text-white'
-                                                                    : 'text-navy-500'
-                                                                }`}
-                                                        >
-                                                            {match.score1 ?? '-'}
-                                                        </span>
-                                                        <span className="text-navy-500">:</span>
-                                                        <span
-                                                            className={`text-2xl font-black tabular-nums ${match.status === 'completed'
-                                                                    ? match.score2! > match.score1!
-                                                                        ? 'text-success'
-                                                                        : 'text-white'
-                                                                    : 'text-navy-500'
-                                                                }`}
-                                                        >
-                                                            {match.score2 ?? '-'}
-                                                        </span>
-                                                    </div>
+                                                        <div className="flex items-center gap-3 justify-center">
+                                                            {/* Team 1 */}
+                                                            <div className="flex-1 text-right">
+                                                                <span className="text-sm font-bold text-white drop-shadow-md">
+                                                                    {match.team1.playerIds.map(getPlayerName).join(' & ')}
+                                                                </span>
+                                                            </div>
 
-                                                    <div className="flex-1 text-left">
-                                                        <span className="font-medium text-white">
-                                                            {match.team2.playerIds.map(getPlayerName).join(' & ')}
-                                                        </span>
+                                                            {/* Scores */}
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span
+                                                                    className={`text-2xl font-black tabular-nums drop-shadow-md ${match.status === 'completed'
+                                                                        ? match.score1! > match.score2!
+                                                                            ? 'text-yellow-300'
+                                                                            : 'text-white'
+                                                                        : 'text-white/40'
+                                                                        }`}
+                                                                >
+                                                                    {match.score1 ?? '-'}
+                                                                </span>
+                                                                <span className="text-white/40 font-bold">:</span>
+                                                                <span
+                                                                    className={`text-2xl font-black tabular-nums drop-shadow-md ${match.status === 'completed'
+                                                                        ? match.score2! > match.score1!
+                                                                            ? 'text-yellow-300'
+                                                                            : 'text-white'
+                                                                        : 'text-white/40'
+                                                                        }`}
+                                                                >
+                                                                    {match.score2 ?? '-'}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Team 2 */}
+                                                            <div className="flex-1 text-left">
+                                                                <span className="text-sm font-bold text-white drop-shadow-md">
+                                                                    {match.team2.playerIds.map(getPlayerName).join(' & ')}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </button>
@@ -275,6 +325,9 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                     <span className="text-sm text-navy-300 ml-2">
                                         {currentRound.sitting.map(getPlayerName).join(', ')}
                                     </span>
+                                    <span className="text-xs text-gold-400 ml-2 font-medium">
+                                        {t.byePoints}
+                                    </span>
                                 </div>
                             )}
                         </div>
@@ -286,10 +339,15 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                     ↪ {t.nextRound}
                                 </button>
                             )}
+                            {isCurrentRoundComplete && isAmericanoFormat && !isFinalRound && (
+                                <button onClick={handleFinalRound} className="btn-secondary w-full max-w-sm text-gold-400 border-gold-500/30">
+                                    🏁 {t.lastMatch} (1&4 vs 2&3)
+                                </button>
+                            )}
                             {!isCurrentRoundComplete && (
                                 <p className="text-sm text-navy-400">{t.enterAllScores}</p>
                             )}
-                            {isCurrentRoundComplete && (
+                            {isCurrentRoundComplete && !isFinalRound && (
                                 <button onClick={handleFinish} className="btn-secondary w-full max-w-sm">
                                     🏁 {t.finishTournament}
                                 </button>
@@ -300,7 +358,7 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                         {tournament.currentRound > 1 && (
                             <div className="mt-10">
                                 <h3 className="text-sm font-bold text-navy-400 uppercase tracking-wider mb-3">
-                                    Previous Rounds
+                                    {t.previousRounds}
                                 </h3>
                                 {tournament.rounds
                                     .slice(0, tournament.currentRound - 1)
@@ -341,6 +399,25 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                 {/* ── Leaderboard Tab ── */}
                 {activeTab === 'leaderboard' && (
                     <div className="animate-fade-in">
+                        {/* Sort Toggle */}
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm text-navy-400 font-medium">{t.sortResults}:</span>
+                            <div className="sort-toggle">
+                                <button
+                                    className={sortMode === 'points' ? 'active' : ''}
+                                    onClick={() => setSortMode('points')}
+                                >
+                                    {t.sortByPoints}
+                                </button>
+                                <button
+                                    className={sortMode === 'wins' ? 'active' : ''}
+                                    onClick={() => setSortMode('wins')}
+                                >
+                                    {t.sortByWins}
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="glass-card-static overflow-hidden">
                             <table className="w-full">
                                 <thead>
@@ -366,7 +443,7 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {standings.map((s, idx) => (
+                                    {sortedStandings.map((s, idx) => (
                                         <tr
                                             key={s.playerId}
                                             className="border-b border-navy-800/30 hover:bg-navy-800/30 transition-colors cursor-pointer"
@@ -378,12 +455,12 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                             <td className="px-4 py-3">
                                                 <span
                                                     className={`font-black text-lg ${idx === 0
-                                                            ? 'position-1'
-                                                            : idx === 1
-                                                                ? 'position-2'
-                                                                : idx === 2
-                                                                    ? 'position-3'
-                                                                    : 'text-navy-400'
+                                                        ? 'position-1'
+                                                        : idx === 1
+                                                            ? 'position-2'
+                                                            : idx === 2
+                                                                ? 'position-3'
+                                                                : 'text-navy-400'
                                                         }`}
                                                 >
                                                     {idx + 1}
@@ -404,10 +481,10 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                             <td className="px-4 py-3 text-center">
                                                 <span
                                                     className={`font-medium ${s.pointDifference > 0
-                                                            ? 'text-success'
-                                                            : s.pointDifference < 0
-                                                                ? 'text-error'
-                                                                : 'text-navy-400'
+                                                        ? 'text-success'
+                                                        : s.pointDifference < 0
+                                                            ? 'text-error'
+                                                            : 'text-navy-400'
                                                         }`}
                                                 >
                                                     {s.pointDifference > 0 ? '+' : ''}
@@ -432,8 +509,8 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                                     key={s.playerId}
                                     onClick={() => setSelectedPlayer(s.playerId)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedPlayer === s.playerId
-                                            ? 'bg-gold-500/20 text-gold-300 border border-gold-500/30'
-                                            : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                        ? 'bg-gold-500/20 text-gold-300 border border-gold-500/30'
+                                        : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
                                         }`}
                                 >
                                     {s.playerName}
@@ -510,6 +587,31 @@ export default function ActiveTournamentPage({ params }: { params: Promise<{ id:
                     </div>
                 )}
             </main>
+
+            {/* Final Round Confirmation Modal */}
+            {showFinalConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="glass-card p-6 max-w-sm w-full text-center space-y-4">
+                        <div className="text-4xl mb-2">🏁</div>
+                        <h3 className="text-xl font-bold text-white">{t.lastMatchConfirm}</h3>
+                        <p className="text-sm text-navy-300">{t.lastMatchWarning}</p>
+                        <div className="flex gap-3 mt-4">
+                            <button
+                                onClick={() => setShowFinalConfirm(false)}
+                                className="btn-secondary flex-1"
+                            >
+                                {t.cancel}
+                            </button>
+                            <button
+                                onClick={confirmFinalRound}
+                                className="btn-primary flex-1"
+                            >
+                                {t.confirm}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

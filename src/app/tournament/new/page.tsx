@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/Header';
-import { TournamentFormat, ScoringSystem, Player, Team, Gender } from '@/lib/types';
+import { TournamentFormat, ScoringSystem, Player, Team, Gender, RoundMode } from '@/lib/types';
 
 type Step = 'format' | 'players' | 'settings' | 'review';
 const STEPS: Step[] = ['format', 'players', 'settings', 'review'];
@@ -33,6 +33,32 @@ export default function NewTournamentPage() {
     const [tournamentName, setTournamentName] = useState('');
     const [courts, setCourts] = useState(2);
     const [scoringSystem, setScoringSystem] = useState<ScoringSystem>(21);
+    const [roundMode, setRoundMode] = useState<RoundMode>('unlimited');
+
+    // Pre-fill from repeat tournament settings
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('repeat') === '1') {
+            try {
+                const raw = localStorage.getItem('padel_repeat_settings');
+                if (raw) {
+                    const s = JSON.parse(raw);
+                    if (s.format) setFormat(s.format);
+                    if (s.players) setPlayers(s.players);
+                    if (s.teams) setTeams(s.teams);
+                    if (s.name) setTournamentName(s.name);
+                    if (s.courts) setCourts(s.courts);
+                    if (s.scoringSystem) setScoringSystem(s.scoringSystem);
+                    if (s.roundMode) setRoundMode(s.roundMode);
+                    setStep('settings');
+                    localStorage.removeItem('padel_repeat_settings');
+                }
+            } catch (e) {
+                console.error('Failed to parse repeat settings', e);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const isTeamFormat = format === 'teamAmericano' || format === 'teamMexicano';
     const isMixedFormat = format === 'mixedAmericano';
@@ -166,6 +192,7 @@ export default function NewTournamentPage() {
                 courts,
                 players,
                 teams: isTeamFormat ? teams : [],
+                roundMode,
             },
         });
         // Navigate to the active tournament (the latest one)
@@ -200,10 +227,10 @@ export default function NewTournamentPage() {
                                     if (i <= currentIdx) setStep(s);
                                 }}
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step === s
-                                        ? 'bg-gold-500 text-navy-950 scale-110'
-                                        : STEPS.indexOf(s) < STEPS.indexOf(step)
-                                            ? 'bg-navy-500 text-white'
-                                            : 'bg-navy-800 text-navy-400'
+                                    ? 'bg-gold-500 text-navy-950 scale-110'
+                                    : STEPS.indexOf(s) < STEPS.indexOf(step)
+                                        ? 'bg-navy-500 text-white'
+                                        : 'bg-navy-800 text-navy-400'
                                     }`}
                             >
                                 {i + 1}
@@ -217,8 +244,8 @@ export default function NewTournamentPage() {
                             {i < STEPS.length - 1 && (
                                 <div
                                     className={`w-8 h-0.5 ${STEPS.indexOf(s) < STEPS.indexOf(step)
-                                            ? 'bg-navy-500'
-                                            : 'bg-navy-800'
+                                        ? 'bg-navy-500'
+                                        : 'bg-navy-800'
                                         }`}
                                 />
                             )}
@@ -238,8 +265,8 @@ export default function NewTournamentPage() {
                                         key={opt.value}
                                         onClick={() => setFormat(opt.value)}
                                         className={`glass-card p-5 text-left transition-all ${format === opt.value
-                                                ? 'border-gold-500/50 bg-gold-500/10 shadow-lg shadow-gold-500/10'
-                                                : ''
+                                            ? 'border-gold-500/50 bg-gold-500/10 shadow-lg shadow-gold-500/10'
+                                            : ''
                                             }`}
                                     >
                                         <div className="flex items-start gap-4">
@@ -360,10 +387,10 @@ export default function NewTournamentPage() {
                                                             onClick={() => togglePlayerInTeam(player.id, team.id)}
                                                             disabled={isInOtherTeam && !isInTeam}
                                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isInTeam
-                                                                    ? 'bg-gold-500/20 text-gold-300 border border-gold-500/30'
-                                                                    : isInOtherTeam
-                                                                        ? 'bg-navy-800 text-navy-500 cursor-not-allowed'
-                                                                        : 'bg-navy-700 text-navy-200 hover:bg-navy-600'
+                                                                ? 'bg-gold-500/20 text-gold-300 border border-gold-500/30'
+                                                                : isInOtherTeam
+                                                                    ? 'bg-navy-800 text-navy-500 cursor-not-allowed'
+                                                                    : 'bg-navy-700 text-navy-200 hover:bg-navy-600'
                                                                 }`}
                                                         >
                                                             {player.name}
@@ -425,8 +452,8 @@ export default function NewTournamentPage() {
                                                 key={n}
                                                 onClick={() => setCourts(n)}
                                                 className={`flex-1 py-3 rounded-xl font-bold text-lg transition-all ${courts === n
-                                                        ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
-                                                        : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                                    ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
+                                                    : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
                                                     }`}
                                             >
                                                 {n}
@@ -445,8 +472,8 @@ export default function NewTournamentPage() {
                                                 key={s}
                                                 onClick={() => setScoringSystem(s)}
                                                 className={`flex-1 py-3 rounded-xl font-bold transition-all ${scoringSystem === s
-                                                        ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
-                                                        : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                                    ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
+                                                    : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
                                                     }`}
                                             >
                                                 {s}
@@ -456,6 +483,32 @@ export default function NewTournamentPage() {
                                     <p className="text-xs text-navy-400 mt-2 text-center">
                                         {t.pointsPerMatch}
                                     </p>
+                                </div>
+
+                                <div className="glass-card-static p-5">
+                                    <label className="block text-sm font-medium text-navy-300 mb-3">
+                                        {t.roundModeLabel}
+                                    </label>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setRoundMode('fixed')}
+                                            className={`flex-1 py-3 rounded-xl font-bold transition-all ${roundMode === 'fixed'
+                                                ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
+                                                : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                                }`}
+                                        >
+                                            {t.roundModeFixed}
+                                        </button>
+                                        <button
+                                            onClick={() => setRoundMode('unlimited')}
+                                            className={`flex-1 py-3 rounded-xl font-bold transition-all ${roundMode === 'unlimited'
+                                                ? 'bg-gold-500 text-navy-950 shadow-lg shadow-gold-500/20'
+                                                : 'bg-navy-800 text-navy-300 hover:bg-navy-700'
+                                                }`}
+                                        >
+                                            ∞ {t.roundModeUnlimited}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -486,6 +539,12 @@ export default function NewTournamentPage() {
                                 <div className="flex justify-between items-center py-2">
                                     <span className="text-navy-300">{t.scoringSystem}</span>
                                     <span className="font-bold text-white">{scoringSystem} pkt</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-t border-navy-700/50">
+                                    <span className="text-navy-300">{t.roundModeLabel}</span>
+                                    <span className="font-bold text-white">
+                                        {roundMode === 'unlimited' ? `∞ ${t.roundModeUnlimited}` : t.roundModeFixed}
+                                    </span>
                                 </div>
 
                                 {/* Player names */}

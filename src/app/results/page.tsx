@@ -67,7 +67,7 @@ function SharedResultsContent() {
                             <Image src="/logo.svg" alt="Logo" width={32} height={32} className="w-full h-full object-contain" />
                         </div>
                         <span className="text-lg font-bold bg-gradient-to-r from-gold-400 to-gold-500 bg-clip-text text-transparent">
-                            Padel Mixer
+                            Baza Padel Tournament
                         </span>
                     </div>
                 </header>

@@ -96,6 +96,21 @@ export interface Translations {
     pointsTotal: string;
     matchesTotal: string;
 
+    // Sorting
+    sortResults: string;
+    sortByPoints: string;
+    sortByWins: string;
+
+    // Last match
+    lastMatch: string;
+    lastMatchConfirm: string;
+    lastMatchWarning: string;
+    previousRounds: string;
+
+    // Repeat
+    repeatTournament: string;
+    repeatTournamentDesc: string;
+
     // Misc
     confirmDelete: string;
     cancel: string;
@@ -106,10 +121,23 @@ export interface Translations {
     warning: string;
     minPlayersRequired: string;
     evenPlayersRequired: string;
+    roundModeLabel: string;
+    roundModeFixed: string;
+    roundModeUnlimited: string;
+    byePoints: string;
+
+    // Search & pagination
+    searchTournaments: string;
+    filterAll: string;
+    filterActive: string;
+    filterFinished: string;
+    previousPage: string;
+    nextPage: string;
+    pageOf: string;
 }
 
 const pl: Translations = {
-    appName: 'Padel Mixer',
+    appName: 'Baza Padel Tournament',
     newTournament: 'Nowy turniej',
     continueTournament: 'Kontynuuj',
     deleteTournament: 'Usuń turniej',
@@ -194,6 +222,16 @@ const pl: Translations = {
     pointsTotal: 'Punkty łącznie',
     matchesTotal: 'Mecze łącznie',
 
+    sortResults: 'Sortowanie',
+    sortByPoints: 'Po punktach',
+    sortByWins: 'Po wygranych',
+    lastMatch: 'Ostatni mecz',
+    lastMatchConfirm: 'Czy na pewno chcesz zagrać ostatni mecz?',
+    lastMatchWarning: 'Po wprowadzeniu wyników turniej zostanie zakończony.',
+    previousRounds: 'Poprzednie rundy',
+    repeatTournament: 'Powtórz turniej',
+    repeatTournamentDesc: 'Stwórz nowy turniej z tymi samymi ustawieniami',
+
     confirmDelete: 'Czy na pewno chcesz usunąć ten turniej?',
     cancel: 'Anuluj',
     confirm: 'Potwierdź',
@@ -203,10 +241,21 @@ const pl: Translations = {
     warning: 'Uwaga',
     minPlayersRequired: 'Wymagana minimalna liczba graczy:',
     evenPlayersRequired: 'Wymagana parzysta liczba graczy',
+    roundModeLabel: 'Tryb rund',
+    roundModeFixed: 'Określona liczba',
+    roundModeUnlimited: 'Nielimitowane',
+    byePoints: '+11 pkt za pauzę',
+    searchTournaments: 'Szukaj turnieju...',
+    filterAll: 'Wszystkie',
+    filterActive: 'Aktywne',
+    filterFinished: 'Zakończone',
+    previousPage: 'Poprzednia',
+    nextPage: 'Następna',
+    pageOf: 'z',
 };
 
 const en: Translations = {
-    appName: 'Padel Mixer',
+    appName: 'Baza Padel Tournament',
     newTournament: 'New Tournament',
     continueTournament: 'Continue',
     deleteTournament: 'Delete Tournament',
@@ -291,6 +340,16 @@ const en: Translations = {
     pointsTotal: 'Total Points',
     matchesTotal: 'Total Matches',
 
+    sortResults: 'Sort by',
+    sortByPoints: 'By Points',
+    sortByWins: 'By Wins',
+    lastMatch: 'Last Match',
+    lastMatchConfirm: 'Are you sure you want to play the last match?',
+    lastMatchWarning: 'The tournament will end after entering the scores.',
+    previousRounds: 'Previous Rounds',
+    repeatTournament: 'Repeat Tournament',
+    repeatTournamentDesc: 'Create a new tournament with the same settings',
+
     confirmDelete: 'Are you sure you want to delete this tournament?',
     cancel: 'Cancel',
     confirm: 'Confirm',
@@ -300,10 +359,21 @@ const en: Translations = {
     warning: 'Warning',
     minPlayersRequired: 'Minimum players required:',
     evenPlayersRequired: 'Even number of players required',
+    roundModeLabel: 'Round mode',
+    roundModeFixed: 'Fixed rounds',
+    roundModeUnlimited: 'Unlimited',
+    byePoints: '+11 pts bye',
+    searchTournaments: 'Search tournaments...',
+    filterAll: 'All',
+    filterActive: 'Active',
+    filterFinished: 'Finished',
+    previousPage: 'Previous',
+    nextPage: 'Next',
+    pageOf: 'of',
 };
 
 const de: Translations = {
-    appName: 'Padel Mixer',
+    appName: 'Baza Padel Tournament',
     newTournament: 'Neues Turnier',
     continueTournament: 'Fortsetzen',
     deleteTournament: 'Turnier löschen',
@@ -388,6 +458,16 @@ const de: Translations = {
     pointsTotal: 'Gesamtpunkte',
     matchesTotal: 'Spiele gesamt',
 
+    sortResults: 'Sortieren',
+    sortByPoints: 'Nach Punkten',
+    sortByWins: 'Nach Siegen',
+    lastMatch: 'Letztes Spiel',
+    lastMatchConfirm: 'Möchtest du wirklich das letzte Spiel spielen?',
+    lastMatchWarning: 'Das Turnier endet nach der Eingabe der Ergebnisse.',
+    previousRounds: 'Vorherige Runden',
+    repeatTournament: 'Turnier wiederholen',
+    repeatTournamentDesc: 'Erstelle ein neues Turnier mit denselben Einstellungen',
+
     confirmDelete: 'Möchtest du dieses Turnier wirklich löschen?',
     cancel: 'Abbrechen',
     confirm: 'Bestätigen',
@@ -397,6 +477,17 @@ const de: Translations = {
     warning: 'Warnung',
     minPlayersRequired: 'Mindestanzahl an Spielern erforderlich:',
     evenPlayersRequired: 'Gerade Anzahl an Spielern erforderlich',
+    roundModeLabel: 'Rundenmodus',
+    roundModeFixed: 'Feste Runden',
+    roundModeUnlimited: 'Unbegrenzt',
+    byePoints: '+11 Pkt Freilos',
+    searchTournaments: 'Turnier suchen...',
+    filterAll: 'Alle',
+    filterActive: 'Aktiv',
+    filterFinished: 'Beendet',
+    previousPage: 'Zurück',
+    nextPage: 'Weiter',
+    pageOf: 'von',
 };
 
 export const translations: Record<Locale, Translations> = { pl, en, de };

@@ -53,6 +53,8 @@ export interface Round {
     sitting: string[]; // playerIds sitting out this round
 }
 
+export type RoundMode = 'fixed' | 'unlimited';
+
 export interface Tournament {
     id: string;
     name: string;
@@ -63,6 +65,7 @@ export interface Tournament {
     courts: number;
     rounds: Round[];
     currentRound: number;
+    roundMode: RoundMode;
     status: TournamentStatus;
     createdAt: string;
     updatedAt: string;
@@ -86,4 +89,5 @@ export interface TournamentSettings {
     courts: number;
     players: Player[];
     teams: Team[];
+    roundMode: RoundMode;
 }

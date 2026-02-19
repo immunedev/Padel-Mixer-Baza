@@ -14,6 +14,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     const router = useRouter();
     const [copied, setCopied] = useState(false);
     const [showAllRounds, setShowAllRounds] = useState(false);
+    const [sortMode, setSortMode] = useState<'points' | 'wins'>('points');
 
     useEffect(() => {
         loadTournamentById(id);
@@ -36,6 +37,19 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     const getPlayerName = (pid: string) =>
         tournament.players.find((p) => p.id === pid)?.name || pid;
 
+    // Sort standings based on selected mode
+    const sortedStandings = [...standings].sort((a, b) => {
+        if (sortMode === 'wins') {
+            if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            return b.pointDifference - a.pointDifference;
+        }
+        // Default: points first
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference;
+        return b.matchesWon - a.matchesWon;
+    });
+
     const handleShare = async () => {
         const url = generateShareableUrl(tournament);
         try {
@@ -55,7 +69,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         }
     };
 
-    const podium = standings.slice(0, 3);
+    const podium = sortedStandings.slice(0, 3);
     const trophies = ['🥇', '🥈', '🥉'];
     const podiumClasses = ['podium-1', 'podium-2', 'podium-3'];
 
@@ -157,7 +171,29 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
                 {/* Full Standings Table */}
                 <div className="mb-8 animate-slide-up stagger-3" style={{ opacity: 0 }}>
-                    <h3 className="text-lg font-bold text-navy-200 mb-4">{t.finalStandings}</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-navy-200">{t.finalStandings}</h3>
+                        <div className="flex gap-1 bg-navy-800/50 rounded-xl p-1">
+                            <button
+                                onClick={() => setSortMode('points')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${sortMode === 'points'
+                                    ? 'bg-gold-500 text-navy-950'
+                                    : 'text-navy-300 hover:text-white'
+                                    }`}
+                            >
+                                {t.sortByPoints}
+                            </button>
+                            <button
+                                onClick={() => setSortMode('wins')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${sortMode === 'wins'
+                                    ? 'bg-gold-500 text-navy-950'
+                                    : 'text-navy-300 hover:text-white'
+                                    }`}
+                            >
+                                {t.sortByWins}
+                            </button>
+                        </div>
+                    </div>
                     <div className="glass-card-static overflow-hidden">
                         <table className="w-full">
                             <thead>
@@ -172,7 +208,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                 </tr>
                             </thead>
                             <tbody>
-                                {standings.map((s, idx) => (
+                                {sortedStandings.map((s, idx) => (
                                     <tr
                                         key={s.playerId}
                                         className={`border-b border-navy-800/30 ${idx < 3 ? 'bg-navy-800/20' : ''
@@ -272,14 +308,33 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                 {/* Footer with logo */}
                 <div className="text-center py-8 border-t border-navy-800/50 mt-8">
                     <div className="w-12 h-12 mx-auto rounded-xl overflow-hidden bg-white/5 p-2 mb-2 opacity-40">
-                        <Image src="/logo.svg" alt="Logo" width={48} height={48} className="w-full h-full object-contain" />
+                        <Image src="/logo.jpg" alt="Logo" width={48} height={48} className="w-full h-full object-contain" />
                     </div>
-                    <p className="text-xs text-navy-500">Padel Mixer</p>
+                    <p className="text-xs text-navy-500">Baza Padel Club</p>
                 </div>
 
-                {/* Back to home */}
-                <div className="text-center mt-4 mb-8">
-                    <button onClick={() => router.push('/')} className="btn-ghost">
+                {/* Repeat & Back buttons */}
+                <div className="flex flex-col items-center gap-3 mt-4 mb-8">
+                    <button
+                        onClick={() => {
+                            const repeatSettings = {
+                                name: tournament.name,
+                                format: tournament.format,
+                                scoringSystem: tournament.scoringSystem,
+                                courts: tournament.courts,
+                                players: tournament.players,
+                                teams: tournament.teams || [],
+                                roundMode: tournament.roundMode || 'fixed',
+                            };
+                            localStorage.setItem('padel_repeat_settings', JSON.stringify(repeatSettings));
+                            router.push('/tournament/new?repeat=1');
+                        }}
+                        className="btn-primary w-full max-w-sm text-lg"
+                    >
+                        {t.repeatTournament}
+                    </button>
+                    <p className="text-xs text-navy-400">{t.repeatTournamentDesc}</p>
+                    <button onClick={() => router.push('/')} className="btn-ghost mt-2">
                         ← {t.backToHome}
                     </button>
                 </div>

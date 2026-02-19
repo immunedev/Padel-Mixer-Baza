@@ -3,7 +3,7 @@ import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 
 export const metadata: Metadata = {
-  title: 'Padel Mixer — Turnieje Padel',
+  title: 'Baza Padel Tournament',
   description: 'Aplikacja do organizacji turniejów padel. Americano, Mexicano i więcej formatów turniejowych.',
   icons: {
     icon: '/logo.jpg',

@@ -51,7 +51,7 @@ body {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(135deg, rgba(10, 25, 41, 0.97) 0%, rgba(6, 14, 26, 0.95) 100%);
+    linear-gradient(135deg, rgba(0, 25, 41, 0.97) 0%, rgba(6, 14, 26, 0.95) 100%);
 }
 
 .court-bg::after {
@@ -478,4 +478,168 @@ body {
 .podium-3 {
   background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(205, 127, 50, 0.05));
   border: 1px solid rgba(205, 127, 50, 0.3);
+}
+
+/* ─── Padel Court Card ───────────────────────────────────── */
+.court-card {
+  position: relative;
+  background: linear-gradient(135deg, #4d94d0, #64a9e2, #4d94d0);
+  border-radius: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  padding: 20px 16px;
+  min-height: 200px;
+}
+
+.court-card::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Center net line */
+.court-card::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.court-card-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: url('/baza-padel-sygnet.png') center/contain no-repeat;
+  opacity: 0.2;
+  filter: blur(0.5px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Service lines */
+.court-card-service-top,
+.court-card-service-bottom {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.court-card-service-top {
+  top: 35%;
+}
+
+.court-card-service-bottom {
+  bottom: 35%;
+}
+
+/* Center vertical line */
+.court-card-center-line {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 50%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.court-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Score Picker ───────────────────────────────────────── */
+.score-picker-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: white;
+  font-size: 28px;
+  font-weight: 900;
+  text-align: center;
+  padding: 8px 12px;
+  width: 80px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-sans);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='rgba(255,255,255,0.5)'%3E%3Cpath d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+.score-picker-select:focus {
+  outline: none;
+  border-color: var(--color-gold-500);
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.2);
+}
+
+.score-picker-select option {
+  background: var(--color-navy-900);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.score-auto {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 28px;
+  font-weight: 900;
+  text-align: center;
+  padding: 8px 12px;
+  width: 80px;
+  font-family: var(--font-sans);
+  cursor: default;
+}
+
+/* ─── Sort Toggle ────────────────────────────────────────── */
+.sort-toggle {
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(10, 25, 41, 0.6);
+  border-radius: 10px;
+  padding: 3px;
+  border: 1px solid rgba(77, 148, 208, 0.1);
+}
+
+.sort-toggle button {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  color: rgba(136, 188, 232, 0.5);
+  font-family: var(--font-sans);
+}
+
+.sort-toggle button:hover {
+  color: rgba(136, 188, 232, 0.8);
+}
+
+.sort-toggle button.active {
+  background: rgba(77, 148, 208, 0.2);
+  color: var(--color-gold-400);
 }

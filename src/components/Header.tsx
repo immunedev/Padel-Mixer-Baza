@@ -12,18 +12,15 @@ export default function Header() {
         <header className="sticky top-0 z-50 backdrop-blur-xl bg-navy-950/80 border-b border-navy-700/30">
             <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 p-1 transition-transform group-hover:scale-110">
+                    <div className="h-10 transition-transform group-hover:scale-105">
                         <Image
-                            src="/logo.jpg"
-                            alt="Padel Mixer"
-                            width={40}
+                            src="/baza-padel-logo.png"
+                            alt="Baza Padel Club"
+                            width={160}
                             height={40}
-                            className="w-full h-full object-contain"
+                            className="h-full w-auto object-contain"
                         />
                     </div>
-                    <span className="text-xl font-bold bg-gradient-to-r from-gold-400 to-gold-500 bg-clip-text text-transparent">
-                        {t.appName}
-                    </span>
                 </Link>
 
                 <div className="flex items-center">

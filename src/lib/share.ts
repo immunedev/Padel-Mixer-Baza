@@ -82,6 +82,7 @@ export function parseShareableData(encoded: string): Tournament | null {
                 sitting: [],
             })),
             currentRound: data.r.length,
+            roundMode: 'fixed',
             status: 'finished',
             createdAt: data.d,
             updatedAt: new Date().toISOString(),

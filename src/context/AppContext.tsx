@@ -11,6 +11,8 @@ import {
     generateTeamAmericanoRounds,
     generateMexicanoRound,
     generateTeamMexicanoRound,
+    generateFinalAmericanoRound,
+    generateAmericanoNextRound,
 } from '@/lib/scheduler';
 
 // ─── State ──────────────────────────────────────────────────
@@ -28,6 +30,7 @@ type Action =
     | { type: 'CREATE_TOURNAMENT'; settings: TournamentSettings }
     | { type: 'UPDATE_SCORE'; matchId: string; score1: number; score2: number }
     | { type: 'NEXT_ROUND' }
+    | { type: 'GENERATE_FINAL_ROUND' }
     | { type: 'FINISH_TOURNAMENT' }
     | { type: 'DELETE_TOURNAMENT'; id: string };
 
@@ -38,30 +41,38 @@ function generateTournamentId(): string {
 function createTournament(settings: TournamentSettings): Tournament {
     const id = generateTournamentId();
     const now = new Date().toISOString();
+    const roundMode = settings.roundMode || 'fixed';
 
     let rounds;
-    switch (settings.format) {
-        case 'americano':
-            rounds = generateAmericanoRounds(settings.players, settings.courts);
-            break;
-        case 'mixedAmericano':
-            rounds = generateMixedAmericanoRounds(settings.players, settings.courts);
-            break;
-        case 'teamAmericano':
-            rounds = generateTeamAmericanoRounds(settings.teams, settings.players, settings.courts);
-            break;
-        case 'mexicano': {
-            const firstRound = generateMexicanoRound(settings.players, [], 1, settings.courts);
-            rounds = [firstRound];
-            break;
+
+    // In unlimited mode for Americano-type formats, only generate the first round
+    if (roundMode === 'unlimited' && ['americano', 'mixedAmericano', 'teamAmericano'].includes(settings.format)) {
+        const firstRound = generateAmericanoNextRound(settings.players, [], settings.courts);
+        rounds = [firstRound];
+    } else {
+        switch (settings.format) {
+            case 'americano':
+                rounds = generateAmericanoRounds(settings.players, settings.courts);
+                break;
+            case 'mixedAmericano':
+                rounds = generateMixedAmericanoRounds(settings.players, settings.courts);
+                break;
+            case 'teamAmericano':
+                rounds = generateTeamAmericanoRounds(settings.teams, settings.players, settings.courts);
+                break;
+            case 'mexicano': {
+                const firstRound = generateMexicanoRound(settings.players, [], 1, settings.courts);
+                rounds = [firstRound];
+                break;
+            }
+            case 'teamMexicano': {
+                const firstRound = generateTeamMexicanoRound(settings.teams, settings.players, [], 1, settings.courts);
+                rounds = [firstRound];
+                break;
+            }
+            default:
+                rounds = generateAmericanoRounds(settings.players, settings.courts);
         }
-        case 'teamMexicano': {
-            const firstRound = generateTeamMexicanoRound(settings.teams, settings.players, [], 1, settings.courts);
-            rounds = [firstRound];
-            break;
-        }
-        default:
-            rounds = generateAmericanoRounds(settings.players, settings.courts);
     }
 
     return {
@@ -74,6 +85,7 @@ function createTournament(settings: TournamentSettings): Tournament {
         courts: settings.courts,
         rounds,
         currentRound: 1,
+        roundMode,
         status: 'active',
         createdAt: now,
         updatedAt: now,
@@ -156,14 +168,36 @@ function reducer(state: AppState, action: Action): AppState {
                     t.courts
                 );
                 t.rounds = [...t.rounds, newRound];
+            } else if (t.roundMode === 'unlimited') {
+                // Unlimited mode for Americano-type formats: generate next round dynamically
+                const newRound = generateAmericanoNextRound(t.players, t.rounds, t.courts);
+                t.rounds = [...t.rounds, newRound];
             }
 
-            // For pre-generated rounds (Americano), just advance
+            // For pre-generated rounds (fixed Americano), just advance
             if (nextRoundNumber > t.rounds.length) {
                 // No more rounds - tournament should be finished
                 return state;
             }
 
+            t.currentRound = nextRoundNumber;
+            t.updatedAt = new Date().toISOString();
+            saveTournament(t);
+            const tournaments = state.tournaments.map((tour) =>
+                tour.id === t.id ? t : tour
+            );
+            return { ...state, currentTournament: t, tournaments };
+        }
+
+        case 'GENERATE_FINAL_ROUND': {
+            if (!state.currentTournament) return state;
+            const t = { ...state.currentTournament };
+            const standings = calculateStandings(t);
+            const nextRoundNumber = t.currentRound + 1;
+            const finalRound = generateFinalAmericanoRound(t.players, standings, t.courts);
+            finalRound.number = nextRoundNumber;
+            finalRound.matches = finalRound.matches.map((m) => ({ ...m, round: nextRoundNumber - 1 }));
+            t.rounds = [...t.rounds, finalRound];
             t.currentRound = nextRoundNumber;
             t.updatedAt = new Date().toISOString();
             saveTournament(t);

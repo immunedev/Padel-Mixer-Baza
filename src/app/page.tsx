@@ -18,10 +18,38 @@ export default function HomePage() {
   const { t, tournaments, dispatch } = useApp();
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'finished'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   const sortedTournaments = [...tournaments].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
+
+  // Apply search and filter
+  const filteredTournaments = sortedTournaments.filter((t_item) => {
+    const matchesSearch = searchQuery === '' || t_item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || t_item.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredTournaments.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedTournaments = filteredTournaments.slice(
+    (safeCurrentPage - 1) * PAGE_SIZE,
+    safeCurrentPage * PAGE_SIZE
+  );
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (filter: 'all' | 'active' | 'finished') => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
 
   const handleDelete = (id: string) => {
     dispatch({ type: 'DELETE_TOURNAMENT', id });
@@ -47,15 +75,19 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 min-h-[calc(100vh-64px)] flex flex-col items-center justify-center">
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
           <div className="relative inline-block mb-6">
-
+            <Image
+              src="/baza-padel-logo.png"
+              alt="Baza Padel Club"
+              width={280}
+              height={80}
+              className="mx-auto object-contain"
+              priority
+            />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-3 bg-gradient-to-r from-white via-navy-100 to-navy-200 bg-clip-text text-transparent">
-            {t.appName}
-          </h1>
           <p className="text-navy-300 text-lg max-w-md mx-auto">
             Americano • Mexicano • Mixed • Team
           </p>
@@ -65,7 +97,7 @@ export default function HomePage() {
         <div className="flex justify-center mb-10 animate-slide-up stagger-1" style={{ opacity: 0 }}>
           <button
             onClick={() => router.push('/tournament/new')}
-            className="btn-primary text-lg px-10 py-4 animate-glow flex items-center gap-3"
+            className="btn-primary text-lg px-10 py-4 flex items-center gap-3"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="10" y1="4" x2="10" y2="16" />
@@ -77,10 +109,39 @@ export default function HomePage() {
 
         {/* Tournament List */}
         {sortedTournaments.length > 0 && (
-          <div className="animate-slide-up stagger-2" style={{ opacity: 0 }}>
+          <div className="w-full animate-slide-up stagger-2" style={{ opacity: 0 }}>
             <h2 className="text-xl font-bold mb-4 text-navy-200">{t.savedTournaments}</h2>
+
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder={t.searchTournaments}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-navy-800/60 border border-navy-700/50 text-white placeholder-navy-400 text-sm focus:outline-none focus:border-gold-500/50 transition-colors"
+                />
+              </div>
+              <div className="flex gap-1 bg-navy-800/50 rounded-xl p-1 self-start">
+                {(['all', 'active', 'finished'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => handleFilterChange(filter)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === filter
+                      ? 'bg-gold-500 text-navy-950'
+                      : 'text-navy-300 hover:text-white'
+                      }`}
+                  >
+                    {filter === 'all' ? t.filterAll : filter === 'active' ? t.filterActive : t.filterFinished}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tournament Cards */}
             <div className="space-y-3">
-              {sortedTournaments.map((tournament, index) => (
+              {paginatedTournaments.map((tournament, index) => (
                 <div
                   key={tournament.id}
                   className="glass-card p-4 cursor-pointer animate-fade-in"
@@ -150,13 +211,42 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+
+            {/* Empty filter results */}
+            {filteredTournaments.length === 0 && (
+              <div className="text-center text-navy-400 py-8">
+                <p>{t.noTournaments}</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage <= 1}
+                  className="btn-secondary py-2 px-4 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ← {t.previousPage}
+                </button>
+                <span className="text-sm text-navy-300 tabular-nums">
+                  {safeCurrentPage} {t.pageOf} {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                  className="btn-secondary py-2 px-4 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {t.nextPage} →
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {/* Empty State */}
         {sortedTournaments.length === 0 && (
           <div className="text-center text-navy-400 py-12 animate-fade-in stagger-2" style={{ opacity: 0 }}>
-            <div className="text-5xl mb-4">🏓</div>
             <p className="text-lg">{t.noTournaments}</p>
           </div>
         )}

@@ -67,6 +67,16 @@ export function calculateStandings(tournament: Tournament): PlayerStats[] {
                 }
             }
         }
+
+        // Award bye points to players sitting out in completed rounds
+        if (round.completed && round.sitting && round.sitting.length > 0) {
+            for (const sittingPid of round.sitting) {
+                const stats = statsMap.get(sittingPid);
+                if (stats) {
+                    stats.totalPoints += 11;
+                }
+            }
+        }
     }
 
     // Sort by total points desc, then by point difference desc, then wins desc
